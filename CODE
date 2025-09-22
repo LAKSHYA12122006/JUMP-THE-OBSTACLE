@@ -1,0 +1,88 @@
+# Simple Dino Jump Game
+
+import pygame
+import random
+
+pygame.init()
+
+WIDTH, HEIGHT = 800, 400
+WIN = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Dino Jump Game")
+
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+
+clock = pygame.time.Clock()
+FPS = 60
+
+dino_width, dino_height = 50, 50
+dino_x = 50
+dino_y = HEIGHT - dino_height - 50
+dino_vel_y = 0
+jump = False
+gravity = 1
+
+# Obstacles
+obstacle_width, obstacle_height = 20, 50
+obstacle_list = []
+obstacle_speed = 7
+spawn_timer = 0
+
+# Score
+score = 0
+font = pygame.font.SysFont(None, 30)
+
+# Game loop
+run = True
+while run:
+    clock.tick(FPS)
+    WIN.fill(WHITE)
+    
+    # Event handling
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            run = False
+    
+    # Key press
+    keys = pygame.key.get_pressed()
+    if not jump:
+        if keys[pygame.K_SPACE] or keys[pygame.K_UP]:
+            dino_vel_y = -15
+            jump = True
+
+    # Dino movement
+    dino_y += dino_vel_y
+    dino_vel_y += gravity
+    if dino_y >= HEIGHT - dino_height - 50:
+        dino_y = HEIGHT - dino_height - 50
+        jump = False
+
+    # Draw Dino
+    pygame.draw.rect(WIN, BLACK, (dino_x, dino_y, dino_width, dino_height))
+
+    # Obstacles
+    spawn_timer += 1
+    if spawn_timer > 90:  # spawn obstacle every ~1.5 sec
+        obstacle_list.append([WIDTH, HEIGHT - obstacle_height - 50])
+        spawn_timer = 0
+
+    for obstacle in obstacle_list:
+        obstacle[0] -= obstacle_speed
+        pygame.draw.rect(WIN, BLACK, (obstacle[0], obstacle[1], obstacle_width, obstacle_height))
+        # Collision
+        if (dino_x + dino_width > obstacle[0] and dino_x < obstacle[0] + obstacle_width
+                and dino_y + dino_height > obstacle[1]):
+            run = False  # Game Over
+
+    # Remove off-screen obstacles
+    obstacle_list = [ob for ob in obstacle_list if ob[0] + obstacle_width > 0]
+
+    # Update score
+    score += 1
+    score_text = font.render(f"Score: {score}", True, BLACK)
+    WIN.blit(score_text, (10, 10))
+
+    pygame.display.update()
+
+pygame.quit()
+print(f"Game Over! Your score: {score}")
